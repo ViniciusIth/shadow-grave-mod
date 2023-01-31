@@ -15,7 +15,7 @@ import viniciusith.shadowgrave.entity.ShadowEntity;
 
 public class EntityRegistry {
     public static final Logger LOGGER = LoggerFactory.getLogger("shadowgrave");
-    private static final EntityType<ShadowEntity> SHADOW_ENTITY = Registry.register(
+    public static final EntityType<ShadowEntity> SHADOW_ENTITY = Registry.register(
             Registries.ENTITY_TYPE,
             new Identifier(ShadowGraveMod.MOD_ID, "shadow"),
             FabricEntityTypeBuilder
