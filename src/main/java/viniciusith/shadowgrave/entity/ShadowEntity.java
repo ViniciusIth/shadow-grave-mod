@@ -1,12 +1,19 @@
 package viniciusith.shadowgrave.entity;
 
+import com.mojang.authlib.GameProfile;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.ItemScatterer;
+import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.world.World;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -14,20 +21,61 @@ import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class ShadowEntity extends HostileEntity implements GeoEntity {
-
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+    private PlayerEntity owner;
+    private GameProfile ownerProfile;
+    private DefaultedList<ItemStack> items;
+    private int xp;
 
     public ShadowEntity(EntityType<? extends HostileEntity> entityType, World world) {
         super(entityType, world);
-        this.setCustomName(Text.of("Karonpa"));
+
+        this.ownerProfile = null;
+        this.owner = null;
+        this.items = DefaultedList.ofSize(41, ItemStack.EMPTY);
+        this.xp = 0;
     }
 
     public static DefaultAttributeContainer.Builder setAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 5f)
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, 0.5f)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 8f)
                 .add(EntityAttributes.GENERIC_ATTACK_SPEED, 2f)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.4f);
+    }
+
+    public PlayerEntity getOwner() {
+        return this.owner;
+    }
+
+    public void setOwner(PlayerEntity owner) {
+        this.owner = owner;
+        this.ownerProfile = owner.getGameProfile();
+    }
+
+    public PlayerEntity getOwnerProfile() {
+        return this.owner;
+    }
+
+    public DefaultedList<ItemStack> getItems() {
+        return this.items;
+    }
+
+    public void setItems(DefaultedList<ItemStack> items) {
+        this.items = items;
+    }
+
+    public int getXp(int xp) {
+        return this.xp;
+    }
+
+    public void setXp(int xp) {
+        this.xp = xp;
+    }
+
+    public void setName(String name) {
+        this.setCustomName(Text.of("Shadow of " + name));
     }
 
     @Override
@@ -40,6 +88,25 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
         this.goalSelector.add(5, new WanderAroundGoal(this, 1d));
 
         this.targetSelector.add(1, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
+    }
+
+    @Override
+    public void onDeath(DamageSource damageSource) {
+        Entity attacker = damageSource.getAttacker();
+        PlayerInventory ownerInventory = this.owner.getInventory();
+
+        assert attacker != null;
+        retrieveItems(attacker);
+
+        super.onDeath(damageSource);
+    }
+
+    private void retrieveItems(Entity attacker) {
+        World world = attacker.world;
+
+        if (world.isClient) return;
+
+        ItemScatterer.spawn(attacker.world, this.getBlockPos(), this.items);
     }
 
     @Override
