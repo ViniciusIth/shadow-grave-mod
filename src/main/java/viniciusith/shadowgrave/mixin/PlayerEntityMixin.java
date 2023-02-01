@@ -24,7 +24,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
     }
 
     @Redirect(method = "dropInventory", at = @At(value = "INVOKE", target = "net.minecraft.entity.player.PlayerInventory.dropAll()V"))
-    private void dropAll(PlayerInventory inventory) {
+    private void shadowgrave$replaceInventoryDropWithShadowSpawn(PlayerInventory inventory) {
         ShadowGraveMod.spawnShadow(this.world, this.getPos(), this.inventory.player);
     }
 }
