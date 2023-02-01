@@ -11,6 +11,8 @@ import viniciusith.shadowgrave.entity.ShadowEntity;
 public class ShadowEntityRenderer extends GeoEntityRenderer<ShadowEntity> {
     public ShadowEntityRenderer(EntityRendererFactory.Context renderManager) {
         super(renderManager, new ShadowEntityModel());
+
+        addRenderLayer(new ShadowEntityEyesLayer(this));
     }
 
     @Override
