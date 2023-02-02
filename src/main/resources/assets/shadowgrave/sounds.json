@@ -1,0 +1,12 @@
+{
+  "shadowgrave.shadow.detect": {
+    "sounds": [
+      "shadowgrave:entity/shadow_scream"
+    ]
+  },
+  "shadowgrave.shadow.ambient": {
+    "sounds": [
+      "shadowgrave:entity/shadow_whisper"
+    ]
+  }
+}

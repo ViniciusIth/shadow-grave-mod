@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import viniciusith.shadowgrave.entity.ShadowEntity;
 import viniciusith.shadowgrave.registry.EntityRegistry;
+import viniciusith.shadowgrave.registry.SoundRegistry;
 
 public class ShadowGraveMod implements ModInitializer {
     public static final String MOD_ID = "shadowgrave";
@@ -50,6 +51,7 @@ public class ShadowGraveMod implements ModInitializer {
 
         LOGGER.info("Hello Fabric world!");
 
+        SoundRegistry.registerAllSounds();
         EntityRegistry.registerAllEntities();
     }
 }
