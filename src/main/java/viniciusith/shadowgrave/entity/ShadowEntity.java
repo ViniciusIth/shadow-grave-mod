@@ -22,19 +22,16 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class ShadowEntity extends HostileEntity implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-
-    private PlayerEntity owner;
-    private GameProfile ownerProfile;
-    private DefaultedList<ItemStack> items;
+    private GameProfile shadowOwner;
+    private DefaultedList<ItemStack> items = DefaultedList.ofSize(41, ItemStack.EMPTY);
+    private Vec3d spawnPos;
     private int xp;
 
     public ShadowEntity(EntityType<? extends HostileEntity> entityType, World world) {
         super(entityType, world);
 
-        this.ownerProfile = null;
-        this.owner = null;
-        this.items = DefaultedList.ofSize(41, ItemStack.EMPTY);
-        this.xp = 0;
+        this.setNoGravity(true);
+        this.noClip = true;
     }
 
     public static DefaultAttributeContainer.Builder setAttributes() {
@@ -49,13 +46,13 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
         return this.owner;
     }
 
-    public void setOwner(PlayerEntity owner) {
-        this.owner = owner;
-        this.ownerProfile = owner.getGameProfile();
+    public GameProfile getOwner() {
+        return this.shadowOwner;
     }
 
-    public PlayerEntity getOwnerProfile() {
-        return this.owner;
+    public void setOwner(GameProfile owner) {
+        this.shadowOwner = owner;
+        this.setCustomName(Text.of("Shadow of " + owner.getName()));
     }
 
     public DefaultedList<ItemStack> getItems() {
@@ -66,7 +63,15 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
         this.items = items;
     }
 
-    public int getXp(int xp) {
+    public Vec3d getSpawnPos() {
+        return this.spawnPos;
+    }
+
+    public void setSpawnPos(Vec3d pos) {
+        this.spawnPos = pos;
+    }
+
+    public int getXp() {
         return this.xp;
     }
 
