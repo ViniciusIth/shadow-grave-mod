@@ -115,13 +115,21 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
     }
 
     @Override
-    public boolean cannotDespawn() {
-        return true;
+    public boolean damage(DamageSource source, float amount) {
+        boolean attackerIsPlayer = (source.getAttacker() != null && source.getAttacker().isPlayer());
+
+        if (source.isOutOfWorld() || attackerIsPlayer) {
+            return super.damage(source, amount);
+        }
+
+        return false;
     }
 
     @Override
-    public boolean shouldRenderName() {
-        return true;
+    public void onDeath(DamageSource source) {
+        retrieveItems(source.getAttacker());
+
+        super.onDeath(source);
     }
 
     // GeckoLib methods
