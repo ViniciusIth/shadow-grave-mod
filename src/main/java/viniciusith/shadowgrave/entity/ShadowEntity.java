@@ -43,10 +43,6 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.4f);
     }
 
-    public PlayerEntity getOwner() {
-        return this.owner;
-    }
-
     public GameProfile getOwner() {
         return this.shadowOwner;
     }
