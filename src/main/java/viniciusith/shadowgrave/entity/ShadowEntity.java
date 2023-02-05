@@ -87,7 +87,7 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
         if (world.isClient)
             return;
 
-        ItemScatterer.spawn(this.world, this.getBlockPos(), this.items);
+        ItemScatterer.spawn(this.world, this.getBlockPos(), this.getItems());
     }
 
     @Override
@@ -100,7 +100,7 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
 
         nbt.putInt("XP", this.getXp());
 
-        if (shadowOwner != null)
+        if (this.getOwner() != null)
             nbt.put("ShadowOwner", NbtHelper.writeGameProfile(new NbtCompound(), this.getOwner()));
 
     }
@@ -142,7 +142,7 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
 
             PlayerManager playerManager = server.getPlayerManager();
 
-            this.setActive(playerManager.getPlayer(this.shadowOwner.getId()) != null);
+            this.setActive(playerManager.getPlayer(this.getOwner().getId()) != null);
         }
 
         super.tick();
@@ -159,7 +159,7 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
     public boolean damage(DamageSource source, float amount) {
         boolean attackerIsPlayer = (source.getAttacker() != null && source.getAttacker().isPlayer());
 
-        if (this.isActive() && (source.isOutOfWorld() || attackerIsPlayer)) {
+        if (source.isOutOfWorld() || (this.isActive() && attackerIsPlayer)) {
             return super.damage(source, amount);
         }
 
