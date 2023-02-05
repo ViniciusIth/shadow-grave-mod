@@ -14,6 +14,8 @@ import net.minecraft.inventory.Inventories;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.collection.DefaultedList;
@@ -31,6 +33,7 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
     private DefaultedList<ItemStack> items = DefaultedList.ofSize(41, ItemStack.EMPTY);
     private Vec3d spawnPos;
     private int xp;
+    private boolean active;
 
     public ShadowEntity(EntityType<? extends HostileEntity> entityType, World world) {
         super(entityType, world);
@@ -102,7 +105,6 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
 
     }
 
-
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
@@ -134,14 +136,14 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
         // by some number, like 20.
         // This will make so that the function runs only on those tick distances.
 
-//        if (!this.world.isClient()) {
-//            MinecraftServer server = this.getServer();
-//            assert server != null;
-//
-//            PlayerManager playerManager = server.getPlayerManager();
+        if (!this.world.isClient()) {
+            MinecraftServer server = this.getServer();
+            assert server != null;
 
-        // this.active = playerManager.getPlayer(this.shadowOwner.getId()) != null;
-//        }
+            PlayerManager playerManager = server.getPlayerManager();
+
+            this.setActive(playerManager.getPlayer(this.shadowOwner.getId()) != null);
+        }
 
         super.tick();
     }
@@ -179,5 +181,13 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return this.cache;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
