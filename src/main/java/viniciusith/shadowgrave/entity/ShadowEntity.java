@@ -10,12 +10,16 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventories;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtHelper;
 import net.minecraft.text.Text;
 import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
@@ -47,7 +51,7 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
         return this.shadowOwner;
     }
 
-    public void setOwner(GameProfile owner) {
+    public void setOwner(@NotNull GameProfile owner) {
         this.shadowOwner = owner;
         this.setCustomName(Text.of("Shadow of " + owner.getName()));
     }
@@ -81,6 +85,36 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
             return;
 
         ItemScatterer.spawn(this.world, this.getBlockPos(), this.items);
+    }
+
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+
+        nbt.putInt("ItemCount", this.getItems().size());
+
+        nbt.put("Items", Inventories.writeNbt(new NbtCompound(), this.getItems(), true));
+
+        nbt.putInt("XP", this.getXp());
+
+        if (shadowOwner != null)
+            nbt.put("ShadowOwner", NbtHelper.writeGameProfile(new NbtCompound(), this.getOwner()));
+
+    }
+
+
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+
+        this.setItems(DefaultedList.ofSize(nbt.getInt("ItemCount"), ItemStack.EMPTY));
+
+        Inventories.readNbt(nbt.getCompound("Items"), this.items);
+
+        this.setXp(nbt.getInt("XP"));
+
+        if (nbt.contains("ShadowOwner"))
+            this.setOwner(NbtHelper.toGameProfile(nbt.getCompound("ShadowOwner")));
     }
 
     @Override
