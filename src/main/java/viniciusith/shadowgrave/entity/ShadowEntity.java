@@ -3,17 +3,18 @@ package viniciusith.shadowgrave.entity;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.*;
+import net.minecraft.entity.MovementType;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -79,39 +80,47 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
         this.xp = xp;
     }
 
-    public void setName(String name) {
-        this.setCustomName(Text.of("Shadow of " + name));
+    private void retrieveItems(Entity attacker) {
+        if (world.isClient)
+            return;
+
+        ItemScatterer.spawn(this.world, this.getBlockPos(), this.items);
+    }
+
+    @Override
+    public int getXpToDrop() {
+        return this.getXp();
+    }
+
+    @Override
+    public void move(MovementType movementType, Vec3d movement) {
+        super.move(movementType, movement);
+        this.checkBlockCollision();
+    }
+
+    @Override
+    public void tick() {
+        // Random tip, you can make an if statement to only run when ticks are divisible
+        // by some number, like 20.
+        // This will make so that the function runs only on those tick distances.
+
+//        if (!this.world.isClient()) {
+//            MinecraftServer server = this.getServer();
+//            assert server != null;
+//
+//            PlayerManager playerManager = server.getPlayerManager();
+
+        // this.active = playerManager.getPlayer(this.shadowOwner.getId()) != null;
+//        }
+
+        super.tick();
     }
 
     @Override
     protected void initGoals() {
         super.initGoals();
 
-        this.goalSelector.add(0, new SwimGoal(this));
-        this.goalSelector.add(3, new MeleeAttackGoal(this, 1d, false));
-        this.goalSelector.add(4, new LookAtEntityGoal(this, PlayerEntity.class, 6.0F, 1.0F));
-        this.goalSelector.add(5, new WanderAroundGoal(this, 1d));
-
-        this.targetSelector.add(1, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
-    }
-
-    @Override
-    public void onDeath(DamageSource damageSource) {
-        Entity attacker = damageSource.getAttacker();
-        PlayerInventory ownerInventory = this.owner.getInventory();
-
-        assert attacker != null;
-        retrieveItems(attacker);
-
-        super.onDeath(damageSource);
-    }
-
-    private void retrieveItems(Entity attacker) {
-        World world = attacker.world;
-
-        if (world.isClient) return;
-
-        ItemScatterer.spawn(attacker.world, this.getBlockPos(), this.items);
+        this.targetSelector.add(1, new ActiveTargetGoal<>(this, PlayerEntity.class, false));
     }
 
     @Override
