@@ -159,7 +159,7 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
     public boolean damage(DamageSource source, float amount) {
         boolean attackerIsPlayer = (source.getAttacker() != null && source.getAttacker().isPlayer());
 
-        if (source.isOutOfWorld() || attackerIsPlayer) {
+        if (this.isActive() && (source.isOutOfWorld() || attackerIsPlayer)) {
             return super.damage(source, amount);
         }
 
