@@ -13,7 +13,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtHelper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.text.Text;
@@ -26,10 +25,13 @@ import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
+import viniciusith.shadowgrave.ShadowGraveMod;
+
+import java.util.UUID;
 
 public class ShadowEntity extends HostileEntity implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-    private GameProfile shadowOwner;
+    private UUID shadowOwner;
     private DefaultedList<ItemStack> items = DefaultedList.ofSize(41, ItemStack.EMPTY);
     private Vec3d spawnPos;
     private int xp;
@@ -50,12 +52,12 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.4f);
     }
 
-    public GameProfile getOwner() {
+    public UUID getOwner() {
         return this.shadowOwner;
     }
 
     public void setOwner(@NotNull GameProfile owner) {
-        this.shadowOwner = owner;
+        this.shadowOwner = owner.getId();
         this.setCustomName(Text.of("Shadow of " + owner.getName()));
     }
 
@@ -92,6 +94,7 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
 
     @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
+
         super.writeCustomDataToNbt(nbt);
 
         nbt.putInt("ItemCount", this.getItems().size());
@@ -101,13 +104,14 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
         nbt.putInt("XP", this.getXp());
 
         if (this.getOwner() != null)
-            nbt.put("ShadowOwner", NbtHelper.writeGameProfile(new NbtCompound(), this.getOwner()));
-
+            nbt.putUuid("ShadowOwner", this.getOwner());
     }
 
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
+
+        ShadowGraveMod.LOGGER.info("reading data");
 
         this.setItems(DefaultedList.ofSize(nbt.getInt("ItemCount"), ItemStack.EMPTY));
 
@@ -116,7 +120,7 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
         this.setXp(nbt.getInt("XP"));
 
         if (nbt.contains("ShadowOwner"))
-            this.setOwner(NbtHelper.toGameProfile(nbt.getCompound("ShadowOwner")));
+            this.shadowOwner = nbt.getUuid("ShadowOwner");
     }
 
     @Override
@@ -142,7 +146,7 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
 
             PlayerManager playerManager = server.getPlayerManager();
 
-            this.setActive(playerManager.getPlayer(this.getOwner().getId()) != null);
+            this.setActive(playerManager.getPlayer(this.getOwner()) != null);
         }
 
         super.tick();
