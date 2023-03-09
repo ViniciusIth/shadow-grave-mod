@@ -33,10 +33,10 @@ public class ShadowGraveMod implements ModInitializer {
         shadow.setPersistent();
         shadow.setPos(pos.x, pos.y, pos.z);
 
-        shadow.setSpawnPos(pos);
-        shadow.setItems(combinedInventory);
-        shadow.setXp(player.totalExperience);
-        shadow.setOwner(player.getGameProfile());
+//        shadow.setSpawnPos(pos);
+//        shadow.setItems(combinedInventory);
+//        shadow.setXp(player.totalExperience);
+        shadow.setOwner(player.getUuid());
 
         world.spawnEntity(shadow);
 

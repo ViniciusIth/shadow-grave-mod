@@ -1,41 +1,31 @@
 package viniciusith.shadowgrave.entity;
 
-import com.mojang.authlib.GameProfile;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MovementType;
-import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventories;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.text.Text;
-import net.minecraft.util.ItemScatterer;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
-import viniciusith.shadowgrave.ShadowGraveMod;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public class ShadowEntity extends HostileEntity implements GeoEntity {
+    protected static final TrackedData<Optional<UUID>> OWNER_UUID;
+    protected static final String OWNER_UUID_NAME = "owner_uuid";
+
+    static {
+        OWNER_UUID = DataTracker.registerData(ShadowEntity.class, TrackedDataHandlerRegistry.OPTIONAL_UUID);
+    }
+
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-    private UUID shadowOwner;
-    private DefaultedList<ItemStack> items = DefaultedList.ofSize(41, ItemStack.EMPTY);
-    private Vec3d spawnPos;
-    private int xp;
-    private boolean active;
 
     public ShadowEntity(EntityType<? extends HostileEntity> entityType, World world) {
         super(entityType, world);
@@ -52,129 +42,33 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.4f);
     }
 
-    public UUID getOwner() {
-        return this.shadowOwner;
-    }
-
-    public void setOwner(@NotNull GameProfile owner) {
-        this.shadowOwner = owner.getId();
-        this.setCustomName(Text.of("Shadow of " + owner.getName()));
-    }
-
-    public DefaultedList<ItemStack> getItems() {
-        return this.items;
-    }
-
-    public void setItems(DefaultedList<ItemStack> items) {
-        this.items = items;
-    }
-
-    public Vec3d getSpawnPos() {
-        return this.spawnPos;
-    }
-
-    public void setSpawnPos(Vec3d pos) {
-        this.spawnPos = pos;
-    }
-
-    public int getXp() {
-        return this.xp;
-    }
-
-    public void setXp(int xp) {
-        this.xp = xp;
-    }
-
-    private void retrieveItems(Entity attacker) {
-        if (world.isClient)
-            return;
-
-        ItemScatterer.spawn(this.world, this.getBlockPos(), this.getItems());
-    }
-
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
+    protected void initDataTracker() {
+        super.initDataTracker();
 
-        super.writeCustomDataToNbt(nbt);
-
-        nbt.putInt("ItemCount", this.getItems().size());
-
-        nbt.put("Items", Inventories.writeNbt(new NbtCompound(), this.getItems(), true));
-
-        nbt.putInt("XP", this.getXp());
-
-        if (this.getOwner() != null)
-            nbt.putUuid("ShadowOwner", this.getOwner());
+        this.dataTracker.startTracking(OWNER_UUID, Optional.empty());
     }
 
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
 
-        ShadowGraveMod.LOGGER.info("reading data");
-
-        this.setItems(DefaultedList.ofSize(nbt.getInt("ItemCount"), ItemStack.EMPTY));
-
-        Inventories.readNbt(nbt.getCompound("Items"), this.items);
-
-        this.setXp(nbt.getInt("XP"));
-
-        if (nbt.contains("ShadowOwner"))
-            this.shadowOwner = nbt.getUuid("ShadowOwner");
+        this.setOwner(nbt.getUuid(OWNER_UUID_NAME));
     }
 
     @Override
-    public int getXpToDrop() {
-        return this.getXp();
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+
+        nbt.putUuid(OWNER_UUID_NAME, this.getOwner().orElse(UUID.randomUUID()));
     }
 
-    @Override
-    public void move(MovementType movementType, Vec3d movement) {
-        super.move(movementType, movement);
-        this.checkBlockCollision();
+    public Optional<UUID> getOwner() {
+        return this.dataTracker.get(OWNER_UUID);
     }
 
-    @Override
-    public void tick() {
-        // Random tip, you can make an if statement to only run when ticks are divisible
-        // by some number, like 20.
-        // This will make so that the function runs only on those tick distances.
-
-        if (!this.world.isClient()) {
-            MinecraftServer server = this.getServer();
-            assert server != null;
-
-            PlayerManager playerManager = server.getPlayerManager();
-
-            this.setActive(playerManager.getPlayer(this.getOwner()) != null);
-        }
-
-        super.tick();
-    }
-
-    @Override
-    protected void initGoals() {
-        super.initGoals();
-
-        this.targetSelector.add(1, new ActiveTargetGoal<>(this, PlayerEntity.class, false));
-    }
-
-    @Override
-    public boolean damage(DamageSource source, float amount) {
-        boolean attackerIsPlayer = (source.getAttacker() != null && source.getAttacker().isPlayer());
-
-        if (source.isOutOfWorld() || (this.isActive() && attackerIsPlayer)) {
-            return super.damage(source, amount);
-        }
-
-        return false;
-    }
-
-    @Override
-    public void onDeath(DamageSource source) {
-        retrieveItems(source.getAttacker());
-
-        super.onDeath(source);
+    public void setOwner(UUID ownerUuid) {
+        this.dataTracker.set(OWNER_UUID, Optional.of(ownerUuid));
     }
 
     // GeckoLib methods
@@ -187,11 +81,4 @@ public class ShadowEntity extends HostileEntity implements GeoEntity {
         return this.cache;
     }
 
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
 }
