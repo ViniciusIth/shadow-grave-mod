@@ -23,6 +23,7 @@ public class ShadowGraveMod implements ModInitializer {
     public static void spawnShadow(World world, Vec3d pos, PlayerEntity player) {
         if (world.isClient) return;
 
+
         DefaultedList<ItemStack> combinedInventory = DefaultedList.of();
 
         combinedInventory.addAll(player.getInventory().main);
@@ -34,8 +35,8 @@ public class ShadowGraveMod implements ModInitializer {
         shadow.setPos(pos.x, pos.y, pos.z);
 
 //        shadow.setSpawnPos(pos);
-//        shadow.setItems(combinedInventory);
-//        shadow.setXp(player.totalExperience);
+        shadow.setStoredInventory(combinedInventory);
+        shadow.setXp(player.totalExperience);
         shadow.setOwner(player.getUuid());
 
         world.spawnEntity(shadow);
