@@ -1,5 +1,6 @@
 package viniciusith.shadowgrave.entity.shadow;
 
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.util.Identifier;
 import software.bernie.geckolib.model.GeoModel;
 import viniciusith.shadowgrave.ShadowGraveMod;
@@ -13,7 +14,12 @@ public class ShadowEntityModel extends GeoModel<ShadowEntity> {
 
     @Override
     public Identifier getTextureResource(ShadowEntity animatable) {
-        return new Identifier(ShadowGraveMod.MOD_ID, "textures/entity/shadow_overlay.png");
+        return new Identifier(ShadowGraveMod.MOD_ID, "textures/entity/shadow_mask.png");
+    }
+
+    @Override
+    public RenderLayer getRenderType(ShadowEntity animatable, Identifier texture) {
+        return RenderLayer.getEntityTranslucent(texture);
     }
 
     @Override
